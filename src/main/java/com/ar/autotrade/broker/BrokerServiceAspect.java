@@ -1,4 +1,4 @@
-package com.ar.autotrade.kite;
+package com.ar.autotrade.broker;
 
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -9,13 +9,13 @@ import org.springframework.context.annotation.Configuration;
 
 @Aspect
 @Configuration
-public class KiteAppApiAspect {
+public class BrokerServiceAspect {
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    @Around("execution(* com.ar.autotrade.kite.KiteAppApi.get*(..)) " +
-            " && execution(* com.ar.autotrade.kite.KiteAppApi.add*(..)) " +
-            " && execution(* com.ar.autotrade.kite.KiteAppApi.cancel*(..))")
+    @Around("execution(* com.ar.autotrade.broker.BrokerService.get*(..)) " +
+            " && execution(* com.ar.autotrade.broker.BrokerService.add*(..)) " +
+            " && execution(* com.ar.autotrade.broker.BrokerService.cancel*(..))")
     public void reLoginIfExpired(ProceedingJoinPoint joinPoint) {
         logger.info(" Check for user access ");
         try {

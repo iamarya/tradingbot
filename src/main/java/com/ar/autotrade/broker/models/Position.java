@@ -1,4 +1,4 @@
-package com.ar.autotrade.kite.models;
+package com.ar.autotrade.broker.models;
 
 public class Position {
     Boolean isIntraday;

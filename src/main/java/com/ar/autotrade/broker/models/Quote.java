@@ -1,4 +1,4 @@
-package com.ar.autotrade.kite.models;
+package com.ar.autotrade.broker.models;
 
 import lombok.Builder;
 import lombok.Data;

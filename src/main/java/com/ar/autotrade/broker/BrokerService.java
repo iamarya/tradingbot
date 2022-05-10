@@ -1,16 +1,16 @@
-package com.ar.autotrade.kite;
+package com.ar.autotrade.broker;
 
-import com.ar.autotrade.kite.models.*;
-import com.ar.autotrade.kite.utils.Utils;
+import com.ar.autotrade.broker.models.*;
+import com.ar.autotrade.broker.utils.Utils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -24,14 +24,22 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Component
-@Data
 @Slf4j
-public class KiteAppApi {
+public class BrokerService {
 
-    String token;
-    String userName;
-    String password;
-    String pin;
+    private String token;
+
+    @Value("${broker.userName}")
+    private String userName;
+
+    @Value("${broker.password}")
+    private String password;
+
+    @Value("${broker.pin}")
+    private String pin;
+
+    @Value("${broker.url}")
+    private String baseUrl;
 
     @Autowired
     OkHttpClient client;
@@ -42,18 +50,35 @@ public class KiteAppApi {
     final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     final DateTimeFormatter zoneFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssZ");
 
+    private Headers getBrokerHeaders() {
+        return Headers.of(Map.ofEntries(Map.entry("authority", "kite.zerodha.com")
+                ,Map.entry("pragma", "no-cache")
+                ,Map.entry("cache-control", "no-cache")
+                ,Map.entry("x-kite-version", "2.7.0")
+                ,Map.entry("accept", "application/json, text/plain, */*")
+                ,Map.entry("sec-ch-ua-mobile", "?0")
+                ,Map.entry("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.182 Safari/537.36")
+                ,Map.entry("sec-ch-ua", "\"Chromium\";v=\"88\", \"Google Chrome\";v=\"88\", \";Not A Brand\";v=\"99\"")
+                ,Map.entry("sec-fetch-site", "same-origin")
+                ,Map.entry("sec-fetch-mode", "cors")
+                ,Map.entry("sec-fetch-dest", "empty")
+                ,Map.entry("referer", "%s/dashboard".formatted(baseUrl))
+                ,Map.entry("accept-language", "en-GB,en-US;q=0.9,en;q=0.8")
+                ,Map.entry("x-kite-userid", userName)));
+    }
+
     public void start() throws IOException {
-        String login_url = "https://kite.zerodha.com/api/login";
-        String twofa_url = "https://kite.zerodha.com/api/twofa";
+        String login_url = "%s/api/login".formatted(baseUrl);
+        String twofa_url = "%s/api/twofa".formatted(baseUrl);
 
         FormBody formBodyBuilder = new FormBody.Builder()
-                .add("user_id",userName)
+                .add("user_id", userName)
                 .add("password", password).build();
 
         Request request = new Request.Builder()
                 .url(login_url)
                 .method("POST", formBodyBuilder)
-                .headers(Utils.getKiteHeaders(userName))
+                .headers(getBrokerHeaders())
                 .build();
         Response response = client.newCall(request).execute();
         String myResult = response.body().string();
@@ -69,7 +94,7 @@ public class KiteAppApi {
         request = new Request.Builder()
                 .url(twofa_url)
                 .method("POST", formBodyBuilder)
-                .headers(Utils.getKiteHeaders(userName))
+                .headers(getBrokerHeaders())
                 .build();
         response = client.newCall(request).execute();
         List<String> cookielist = response.headers().values("Set-Cookie");
@@ -89,15 +114,11 @@ public class KiteAppApi {
         }
     }
 
-    public void setToken(String token) {
-        this.token = token;
-    }
-
     public List<Position> getPositions() throws IOException {
         Request request = new Request.Builder()
-                .url("https://kite.zerodha.com/oms/portfolio/positions")
+                .url("%s/oms/portfolio/positions".formatted(baseUrl))
                 .method("GET", null)
-                .headers(Utils.getKiteHeaders(userName))
+                .headers(getBrokerHeaders())
                 .addHeader("authorization", "enctoken " + this.token)
                 .build();
         Response response = client.newCall(request).execute();
@@ -109,15 +130,15 @@ public class KiteAppApi {
 
     public List<OrderResponse> getOrders() throws IOException {
         Request request = new Request.Builder()
-                .url("https://kite.zerodha.com/oms/orders")
+                .url("%s/oms/orders".formatted(baseUrl))
                 .method("GET", null)
-                .headers(Utils.getKiteHeaders(userName))
+                .headers(getBrokerHeaders())
                 .addHeader("authorization", "enctoken " + this.token)
                 .build();
         Response response = client.newCall(request).execute();
         String myResult = response.body().string();
         response.close();
-        KiteResponse<OrderResponse[]> orders = objectMapper.readValue(myResult, new TypeReference<KiteResponse<OrderResponse[]>>() {
+        BrokerResponse<OrderResponse[]> orders = objectMapper.readValue(myResult, new TypeReference<BrokerResponse<OrderResponse[]>>() {
         });
         if (orders.getStatus().equalsIgnoreCase("error")) {
             log.error("response status {} response {}", orders.getStatus(), myResult);
@@ -149,16 +170,16 @@ public class KiteAppApi {
         }
         FormBody formBody = formBodyBuilder.build();
         Request request = new Request.Builder()
-                .url("https://kite.zerodha.com/oms/orders/" + order.getVariety().getText())
+                .url("%s/oms/orders/".formatted(baseUrl) + order.getVariety().getText())
                 .method("POST", formBody)
-                .headers(Utils.getKiteHeaders(userName))
+                .headers(getBrokerHeaders())
                 .addHeader("content-type", "application/x-www-form-urlencoded")
                 .addHeader("authorization", "enctoken " + this.token)
                 .build();
         Response response = client.newCall(request).execute();
         String myResult = response.body().string();
         response.close();
-        KiteResponse<OrderResponse> orderResponse = objectMapper.readValue(myResult, new TypeReference<KiteResponse<OrderResponse>>() {
+        BrokerResponse<OrderResponse> orderResponse = objectMapper.readValue(myResult, new TypeReference<BrokerResponse<OrderResponse>>() {
         });
         log.debug("Order response is {}", orderResponse);
         if (orderResponse.getStatus().equalsIgnoreCase("error")) {
@@ -169,9 +190,9 @@ public class KiteAppApi {
 
     public void cancelOrder(String orderId) throws IOException {
         Request request = new Request.Builder()
-                .url("https://kite.zerodha.com/oms/orders/regular/" + orderId)
+                .url("%s/oms/orders/regular/".formatted(baseUrl) + orderId)
                 .method("DELETE", null)
-                .headers(Utils.getKiteHeaders(userName))
+                .headers(getBrokerHeaders())
                 .addHeader("authorization", "enctoken " + this.token)
                 .build();
         Response response = client.newCall(request).execute();
@@ -188,15 +209,15 @@ public class KiteAppApi {
         }).get();
         //log.debug("url for ticks {}", url);
         Request request = new Request.Builder()
-                .url("https://kite.zerodha.com/oms/quote?i=NSE:" + url)
+                .url("%s/oms/quote?i=NSE:".formatted(baseUrl) + url)
                 .method("GET", null)
-                .headers(Utils.getKiteHeaders(userName))
+                .headers(getBrokerHeaders())
                 .addHeader("authorization", "enctoken " + this.token)
                 .build();
         Response response = client.newCall(request).execute();
         String myResult = response.body().string();
         response.close();
-        KiteResponse<Map<?, ?>> res = objectMapper.readValue(myResult, new TypeReference<KiteResponse<Map<?, ?>>>() {
+        BrokerResponse<Map<?, ?>> res = objectMapper.readValue(myResult, new TypeReference<BrokerResponse<Map<?, ?>>>() {
         });
         if (res.getStatus().equalsIgnoreCase("error")) {
             log.error("response status {} response {}", res.getStatus(), myResult);
@@ -229,8 +250,8 @@ public class KiteAppApi {
     }
 
     public Integer addGTTOrder(String symbol, Float triggerValue, Float ltp,
-                                Enums.TransactionType type,
-                                Integer quantity, Float price) throws IOException {
+                               Enums.TransactionType type,
+                               Integer quantity, Float price) throws IOException {
         String condition = String.format("{\"exchange\":\"NSE\", \"tradingsymbol\":\"%s\", \"trigger_values\":[%.1f]," +
                 " \"last_price\": %.1f}", symbol, triggerValue, ltp);
         String orders = String.format("[{\"exchange\":\"NSE\", \"tradingsymbol\": \"%s\", " +
@@ -242,9 +263,9 @@ public class KiteAppApi {
                 String.format("condition=%s&orders=%s&&type=single", condition, orders));
         //RequestBody body = RequestBody.create(mediaType, "condition={\"exchange\":\"NSE\",\"tradingsymbol\":\"CPSEETF\",\"trigger_values\":[23.07],\"last_price\":23.07}&orders=[{\"exchange\":\"NSE\",\"tradingsymbol\":\"CPSEETF\",\"transaction_type\":\"BUY\",\"quantity\":1,\"price\":23.07,\"order_type\":\"LIMIT\",\"product\":\"CNC\"}]&type=single");
         Request request = new Request.Builder()
-                .url("https://kite.zerodha.com/oms/gtt/triggers")
+                .url("%s/oms/gtt/triggers".formatted(baseUrl))
                 .method("POST", body)
-                .headers(Utils.getKiteHeaders(userName))
+                .headers(getBrokerHeaders())
                 .addHeader("content-type", "application/x-www-form-urlencoded")
                 .addHeader("authorization", "enctoken " + this.token)
                 .build();
@@ -252,7 +273,7 @@ public class KiteAppApi {
         String myResult = response.body().string();
         log.debug("myResult {} ", myResult);
         response.close();
-        KiteResponse<Map<String, Integer>> orderResponse = objectMapper.readValue(myResult, new TypeReference<KiteResponse<Map<String, Integer>>>() {
+        BrokerResponse<Map<String, Integer>> orderResponse = objectMapper.readValue(myResult, new TypeReference<BrokerResponse<Map<String, Integer>>>() {
         });
         log.debug("Order response is {}", orderResponse);
         if (orderResponse.getStatus().equalsIgnoreCase("error")) {
@@ -264,9 +285,9 @@ public class KiteAppApi {
 
     public GTTOrderResponse getGTTOrder(Integer id) throws IOException {
         Request request = new Request.Builder()
-                .url("https://kite.zerodha.com/oms/gtt/triggers/" + id)
+                .url("%s/oms/gtt/triggers/".formatted(baseUrl) + id)
                 .method("GET", null)
-                .headers(Utils.getKiteHeaders(userName))
+                .headers(getBrokerHeaders())
                 .addHeader("content-type", "application/x-www-form-urlencoded")
                 .addHeader("authorization", "enctoken " + this.token)
                 .build();
@@ -306,9 +327,9 @@ public class KiteAppApi {
         MediaType mediaType = MediaType.parse("text/plain");
         RequestBody body = RequestBody.create(mediaType, "");
         Request request = new Request.Builder()
-                .url("https://kite.zerodha.com/oms/gtt/triggers/" + id)
+                .url("%s/oms/gtt/triggers/".formatted(baseUrl) + id)
                 .method("DELETE", body)
-                .headers(Utils.getKiteHeaders(userName))
+                .headers(getBrokerHeaders())
                 .addHeader("authorization", "enctoken " + this.token)
                 .build();
         Response response = client.newCall(request).execute();
@@ -324,9 +345,9 @@ public class KiteAppApi {
 
     public Enums.Status getOrderStatus(String orderId) throws IOException {
         Request request = new Request.Builder()
-                .url("https://kite.zerodha.com/oms/orders/" + orderId)
+                .url("%s/oms/orders/".formatted(baseUrl) + orderId)
                 .method("GET", null)
-                .headers(Utils.getKiteHeaders(userName))
+                .headers(getBrokerHeaders())
                 .addHeader("authorization", "enctoken " + this.token)
                 .build();
         Response response = client.newCall(request).execute();

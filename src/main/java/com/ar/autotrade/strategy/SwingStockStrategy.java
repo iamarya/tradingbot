@@ -1,6 +1,6 @@
 package com.ar.autotrade.strategy;
 
-import com.ar.autotrade.kite.KiteAppApi;
+import com.ar.autotrade.broker.BrokerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -10,7 +10,7 @@ import javax.annotation.PostConstruct;
 public class SwingStockStrategy {
 
     @Autowired
-    KiteAppApi api;
+    BrokerService api;
 
     public void init(){
 

@@ -1,11 +1,11 @@
-package com.ar.autotrade.kite.models;
+package com.ar.autotrade.broker.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class KiteResponse<T> {
+public class BrokerResponse<T> {
     String status;
     String message;
     T data;
