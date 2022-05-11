@@ -1,9 +1,11 @@
 package com.ar.autotrade;
 
+import com.ar.sheetdb.core.Db;
 import okhttp3.Cookie;
 import okhttp3.CookieJar;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
@@ -17,6 +19,9 @@ import java.util.concurrent.TimeUnit;
 
 @SpringBootApplication
 public class AutotradeApplication {
+
+    @Value("${gsheet.credential}")
+    private String credential;
 
     public static void main(String[] args) {
         init();
@@ -50,6 +55,11 @@ public class AutotradeApplication {
                 })
                 .build();
         return client;
+    }
+
+    @Bean
+    public Db gSheetDb(){
+        return new Db(credential, "autoTrade", "1jlhP5Gd6Ii7b7-l9Vehu3lf4p1ozU4l_qCLeQwOikts", 1000);
     }
 
     public static void init() {
