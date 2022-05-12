@@ -4,56 +4,58 @@ package com.ar.autotrade.strategy.swingstock;
 import com.ar.sheetdb.core.Column;
 import com.ar.sheetdb.core.GoogleSheet;
 import com.ar.sheetdb.core.Table;
-import lombok.Data;
+import lombok.*;
 
 import java.time.LocalDate;
 
 @Table(name="swing", id=0)
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class SwingStock extends GoogleSheet {
     @Column(name = "predicted_on", order = 1)
-    public LocalDate predictedOn;
+    private LocalDate predictedOn;
 
     @Column(name = "name", order = 2)
-    public String tickName;
+    private String tickName;
 
     @Column(name = "model_name", order = 3)
-    public String modelName;
+    private String modelName;
 
     @Column(name = "%", order = 4)
-    public Double profitPercentage;
+    private Double profitPercentage;
 
     @Column(name = "probability", order = 5)
-    public Integer probability;
+    private Integer probability;
 
     @Column(name = "expiry_days", order = 6)
-    public Integer expiryAfter;
+    private Integer expiryAfter;
 
-    @Column(name = "buy_on", order = 7)
-    public LocalDate buyOn;
+    @Column(name = "quantity", order = 7)
+    private Integer quantity;
 
-    @Column(name = "buy_id", order = 8)
-    public Integer buyOrderId;
+    @Column(name = "sl_%", order = 8)
+    private Double stopLossPercentage;
+    @Column(name = "status", order = 9)
+    private SwingStockStatus status;
 
-    @Column(name = "buy_price", order = 9)
-    public Double buyPrice;
 
-    @Column(name = "quantity", order = 10)
-    public Integer quantity;
+    @Column(name = "buy_on", order = 10)
+    private LocalDate buyOn;
 
-    @Column(name = "sl_%", order = 11)
-    public Double stopLossPercentage;
+    @Column(name = "buy_id", order = 11)
+    private Integer buyOrderId;
 
-    @Column(name = "sell_on", order = 12)
-    public LocalDate sellDate;
+    @Column(name = "buy_price", order = 12)
+    private Double buyPrice;
 
-    @Column(name = "sell_id", order = 13)
-    public Integer sellOrderId;
+    @Column(name = "sell_on", order = 13)
+    private LocalDate sellDate;
 
-    @Column(name = "sell_price", order = 14)
-    public Double sellPrice;
+    @Column(name = "sell_id", order = 14)
+    private Integer sellOrderId;
 
-    @Column(name = "status", order = 15)
-    public SwingStockStatus status;
-
+    @Column(name = "sell_price", order = 15)
+    private Double sellPrice;
 }
