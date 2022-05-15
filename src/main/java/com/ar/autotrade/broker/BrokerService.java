@@ -41,6 +41,13 @@ public class BrokerService {
     @Value("${broker.url}")
     private String baseUrl;
 
+    /**
+     * todo Rate Limitter add multiple
+     * Quote	1req/second
+     * Historical candle	3req/second
+     * Order placement	10req/second
+     * All other endpoints	10req/second
+     */
     @Autowired
     OkHttpClient client;
 
@@ -54,7 +61,7 @@ public class BrokerService {
         return Headers.of(Map.ofEntries(Map.entry("authority", "kite.zerodha.com")
                 ,Map.entry("pragma", "no-cache")
                 ,Map.entry("cache-control", "no-cache")
-                ,Map.entry("x-kite-version", "2.7.0")
+                ,Map.entry("x-kite-version", "2.9.11")
                 ,Map.entry("accept", "application/json, text/plain, */*")
                 ,Map.entry("sec-ch-ua-mobile", "?0")
                 ,Map.entry("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.182 Safari/537.36")
@@ -68,6 +75,9 @@ public class BrokerService {
     }
 
     public void start() throws IOException {
+        if(token!=null){
+            return;
+        }
         String login_url = "%s/api/login".formatted(baseUrl);
         String twofa_url = "%s/api/twofa".formatted(baseUrl);
 
@@ -158,7 +168,7 @@ public class BrokerService {
                 .add("quantity", String.valueOf(order.getQuantity()))
                 .add("user_id", userName)
                 .add("validity", "DAY")
-                .add("variety", "regular");
+                .add("variety", order.getVariety().getText());
         if (order.getTag() != null) {
             formBodyBuilder.add("tag", order.getTag());
         }
@@ -249,18 +259,36 @@ public class BrokerService {
         return list;
     }
 
-    public Integer addGTTOrder(String symbol, Float triggerValue, Float ltp,
-                               Enums.TransactionType type,
-                               Integer quantity, Float price) throws IOException {
-        String condition = String.format("{\"exchange\":\"NSE\", \"tradingsymbol\":\"%s\", \"trigger_values\":[%.1f]," +
-                " \"last_price\": %.1f}", symbol, triggerValue, ltp);
-        String orders = String.format("[{\"exchange\":\"NSE\", \"tradingsymbol\": \"%s\", " +
-                        "\"transaction_type\": \"%s\", \"quantity\": %d, " +
-                        "\"order_type\": \"LIMIT\",\"product\": \"CNC\", \"price\": %.1f}]",
-                symbol, type.toString(), quantity, price);
+    public Quote getQuote(String symbol) throws IOException {
+        return getQuotes(List.of(symbol)).get(0);
+    }
+
+    public String addGTTOrder(GttOrder gttOrder) throws IOException {
+        String condition, orders;
+        if(gttOrder.getGttType()== GttOrder.GttType.SINGLE) {
+            condition = String.format("{\"exchange\":\"NSE\", \"tradingsymbol\":\"%s\", \"trigger_values\":[%.1f]," +
+                    " \"last_price\": %.1f}", gttOrder.getSymbol(), gttOrder.getTriggerPrice(), gttOrder.getLtp());
+            orders = String.format("[{\"exchange\":\"NSE\", \"tradingsymbol\": \"%s\", " +
+                            "\"transaction_type\": \"%s\", \"quantity\": %d, " +
+                            "\"order_type\": \"LIMIT\",\"product\": \"CNC\", \"price\": %.1f}]",
+                    gttOrder.getSymbol(), gttOrder.getTransactionType().toString(), gttOrder.getQuantity(), gttOrder.getLimitPrice());
+        } else{
+            condition = String.format("{\"exchange\":\"NSE\", \"tradingsymbol\":\"%s\", \"trigger_values\":[%.1f, %.1f]," +
+                    " \"last_price\": %.1f}", gttOrder.getSymbol(), gttOrder.getStopLossTriggerPrice(), gttOrder.getTriggerPrice(), gttOrder.getLtp());
+            String orderStopLoss = String.format("{\"exchange\":\"NSE\", \"tradingsymbol\": \"%s\", " +
+                            "\"transaction_type\": \"%s\", \"quantity\": %d, " +
+                            "\"order_type\": \"LIMIT\",\"product\": \"CNC\", \"price\": %.1f}",
+                    gttOrder.getSymbol(), gttOrder.getTransactionType().toString(), gttOrder.getQuantity(), gttOrder.getStopLossLimitPrice());
+            String orderTarget = String.format("[{\"exchange\":\"NSE\", \"tradingsymbol\": \"%s\", " +
+                            "\"transaction_type\": \"%s\", \"quantity\": %d, " +
+                            "\"order_type\": \"LIMIT\",\"product\": \"CNC\", \"price\": %.1f}]",
+                    gttOrder.getSymbol(), gttOrder.getTransactionType().toString(), gttOrder.getQuantity(), gttOrder.getLimitPrice());
+            orders = "[".concat(orderStopLoss).concat(orderTarget).concat("]");
+        }
+
         MediaType mediaType = MediaType.parse("application/x-www-form-urlencoded");
         RequestBody body = RequestBody.create(mediaType,
-                String.format("condition=%s&orders=%s&&type=single", condition, orders));
+                String.format("condition=%s&orders=%s&&type=%s", condition, orders, gttOrder.getGttType().getValue()));
         //RequestBody body = RequestBody.create(mediaType, "condition={\"exchange\":\"NSE\",\"tradingsymbol\":\"CPSEETF\",\"trigger_values\":[23.07],\"last_price\":23.07}&orders=[{\"exchange\":\"NSE\",\"tradingsymbol\":\"CPSEETF\",\"transaction_type\":\"BUY\",\"quantity\":1,\"price\":23.07,\"order_type\":\"LIMIT\",\"product\":\"CNC\"}]&type=single");
         Request request = new Request.Builder()
                 .url("%s/oms/gtt/triggers".formatted(baseUrl))
@@ -273,7 +301,7 @@ public class BrokerService {
         String myResult = response.body().string();
         log.debug("myResult {} ", myResult);
         response.close();
-        BrokerResponse<Map<String, Integer>> orderResponse = objectMapper.readValue(myResult, new TypeReference<BrokerResponse<Map<String, Integer>>>() {
+        BrokerResponse<Map<String, String>> orderResponse = objectMapper.readValue(myResult, new TypeReference<BrokerResponse<Map<String, String>>>() {
         });
         log.debug("Order response is {}", orderResponse);
         if (orderResponse.getStatus().equalsIgnoreCase("error")) {
@@ -283,7 +311,7 @@ public class BrokerService {
         return orderResponse.getData().get("trigger_id");
     }
 
-    public GTTOrderResponse getGTTOrder(Integer id) throws IOException {
+    public GttOrderResponse getGTTOrder(String id) throws IOException {
         Request request = new Request.Builder()
                 .url("%s/oms/gtt/triggers/".formatted(baseUrl) + id)
                 .method("GET", null)
@@ -299,21 +327,22 @@ public class BrokerService {
         try {
             orderResponse = objectMapper.readTree(myResult);
         } catch (JsonProcessingException e) {
-            return GTTOrderResponse.builder().status("cancelled").build(); //as the order canceled it will not get from kite
+            return GttOrderResponse.builder().status(GttOrderResponse.Status.getFromValue("cancelled")).build(); //as the order canceled it will not get from kite
         }
         log.debug("Order response is {}", orderResponse);
         if (orderResponse.get("status").textValue().equalsIgnoreCase("error")) {
             throw new RuntimeException(orderResponse.get("message").textValue());
         }
-        GTTOrderResponse.GTTOrderResponseBuilder res = GTTOrderResponse.builder()
-                .status(orderResponse.get("data").get("status").textValue())
+        //BrokerResponse<GttOrderResponse> orderResponse = objectMapper.readValue(myResult, new TypeReference<BrokerResponse<GttOrderResponse>>() { }); todo use full response
+        GttOrderResponse.GttOrderResponseBuilder res = GttOrderResponse.builder()
+                .status(GttOrderResponse.Status.getFromValue(orderResponse.get("data").get("status").textValue()))
                 .lastUpdated(LocalDateTime.parse(orderResponse.get("data").get("updated_at").textValue(), formatter));
         if (orderResponse.get("data").get("status").textValue().equalsIgnoreCase("triggered")) {
             String orderId = orderResponse.get("data").get("orders").get(0).get("result").get("order_result").get("order_id").textValue();
             if (orderId != null && !orderId.isEmpty()) {
-                if (getOrderStatus(orderId) != Enums.Status.COMPLETE) {
+                if (getOrder(orderId).getData().getStatus() != Enums.Status.COMPLETE) {
                     log.debug("{} is not completed for GTT id {}", orderId, id);
-                    res.status("cancelled");
+                    res.status(GttOrderResponse.Status.getFromValue("cancelled"));
                 }
             }
             res.orderStatus(orderResponse.get("data").get("orders").get(0).get("result").get("order_result").get("status").textValue())
@@ -323,7 +352,7 @@ public class BrokerService {
         return res.build();
     }
 
-    public void cancelGTTOrder(Integer id) throws IOException {
+    public void cancelGTTOrder(String id) throws IOException {
         MediaType mediaType = MediaType.parse("text/plain");
         RequestBody body = RequestBody.create(mediaType, "");
         Request request = new Request.Builder()
@@ -343,7 +372,7 @@ public class BrokerService {
         }
     }
 
-    public Enums.Status getOrderStatus(String orderId) throws IOException {
+    public BrokerResponse<OrderResponse> getOrder(String orderId) throws IOException {
         Request request = new Request.Builder()
                 .url("%s/oms/orders/".formatted(baseUrl) + orderId)
                 .method("GET", null)
@@ -353,7 +382,16 @@ public class BrokerService {
         Response response = client.newCall(request).execute();
         String myResult = response.body().string();
         response.close();
-        JsonNode orderResponse = objectMapper.readTree(myResult);
-        return Enums.Status.valueOf(orderResponse.get("data").get(orderResponse.get("data").size() - 1).get("status").asText());
+        //JsonNode orderResponse = objectMapper.readTree(myResult);
+        //todo need buy date so use orderresponse
+        //return Enums.Status.valueOf(orderResponse.get("data").get(orderResponse.get("data").size() - 1).get("status").asText());
+
+        BrokerResponse<OrderResponse> orderResponse = objectMapper.readValue(myResult, new TypeReference<BrokerResponse<OrderResponse>>() {
+        });
+        if (orderResponse.getStatus().equalsIgnoreCase("error")) {
+            log.error("response status {} response {}", orderResponse.getStatus(), myResult);
+            return null;
+        }
+        return orderResponse;
     }
 }

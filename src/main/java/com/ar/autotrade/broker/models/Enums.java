@@ -44,13 +44,17 @@ public class Enums {
     @AllArgsConstructor
     @Getter
     public enum Status {
+        /**
+         * OPEN, CANCELLED, REJECTED, or COMPLETE are the main values we see in UI
+         * Others are fast and mainly for backend
+         */
         @JsonProperty("COMPLETE") COMPLETE("COMPLETE"),
         @JsonProperty("REJECTED") REJECTED("REJECTED"),
         @JsonProperty("CANCELLED") CANCELLED("CANCELLED"),
         @JsonProperty("OPEN") OPEN("OPEN"),
         @JsonProperty("PENDING") PENDING("PENDING"),
-        @JsonProperty("VALIDATION PENDING") VALIDATION_PENDING("VALIDATION PENDING"),
         @JsonProperty("PUT ORDER REQUEST RECEIVED") PUT_ORDER_REQUEST_RECEIVED("PUT ORDER REQUEST RECEIVED"),
+        @JsonProperty("VALIDATION PENDING") VALIDATION_PENDING("VALIDATION PENDING"),
         @JsonProperty("OPEN PENDING") OPEN_PENDING("OPEN PENDING"),
         @JsonProperty("MODIFY VALIDATION PENDING") MODIFY_VALIDATION_PENDING("MODIFY VALIDATION PENDING"),
         @JsonProperty("MODIFY PENDING") MODIFY_PENDING("MODIFY PENDING"),

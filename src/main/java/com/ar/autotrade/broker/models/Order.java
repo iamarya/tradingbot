@@ -32,7 +32,7 @@ public class Order {
                 throw new RuntimeException("Invalid order " + this);
             }
         }
-        if(tag!=null && tag.length()>20){
+        if (tag != null && tag.length() > 20) {
             throw new RuntimeException("Invalid tag length " + this);
         }
     }

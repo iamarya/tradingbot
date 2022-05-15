@@ -8,5 +8,8 @@ public enum SwingStockStatus {
     EXPIRED,
     COMPLETE,
     STOPLOSS,
-    FAILED;
+    BUY_FAILED,
+    GTT_FAILED,
+    SELL_FAILED,
+    CANCEL;
 }

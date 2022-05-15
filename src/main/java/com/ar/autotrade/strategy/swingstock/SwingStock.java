@@ -45,7 +45,7 @@ public class SwingStock extends GoogleSheet {
     private LocalDate buyOn;
 
     @Column(name = "buy_id", order = 11)
-    private Integer buyOrderId;
+    private String buyOrderId;
 
     @Column(name = "buy_price", order = 12)
     private Double buyPrice;
@@ -54,7 +54,7 @@ public class SwingStock extends GoogleSheet {
     private LocalDate sellDate;
 
     @Column(name = "sell_id", order = 14)
-    private Integer sellOrderId;
+    private String sellOrderId;
 
     @Column(name = "sell_price", order = 15)
     private Double sellPrice;
