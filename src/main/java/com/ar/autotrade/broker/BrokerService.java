@@ -2,6 +2,7 @@ package com.ar.autotrade.broker;
 
 import com.ar.autotrade.broker.models.*;
 import com.ar.autotrade.broker.utils.Utils;
+import com.ar.sheetdb.core.BucketRateLimiter;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -14,6 +15,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
@@ -48,8 +50,13 @@ public class BrokerService {
      * Order placement	10req/second
      * All other endpoints	10req/second
      */
+    BucketRateLimiter quoteLimiter = new BucketRateLimiter(1, Duration.ofSeconds(1));
+    BucketRateLimiter orderLimiter = new BucketRateLimiter(10, Duration.ofSeconds(1));
+    BucketRateLimiter brokerOtherLimiter = new BucketRateLimiter(10, Duration.ofSeconds(1));
+
     @Autowired
     OkHttpClient client;
+
 
     private static final ObjectMapper objectMapper =
             new ObjectMapper()
@@ -84,7 +91,7 @@ public class BrokerService {
         FormBody formBodyBuilder = new FormBody.Builder()
                 .add("user_id", userName)
                 .add("password", password).build();
-
+        brokerOtherLimiter.consume();
         Request request = new Request.Builder()
                 .url(login_url)
                 .method("POST", formBodyBuilder)
@@ -106,6 +113,7 @@ public class BrokerService {
                 .method("POST", formBodyBuilder)
                 .headers(getBrokerHeaders())
                 .build();
+        brokerOtherLimiter.consume();
         response = client.newCall(request).execute();
         List<String> cookielist = response.headers().values("Set-Cookie");
         response.close();
@@ -125,6 +133,7 @@ public class BrokerService {
     }
 
     public List<Position> getPositions() throws IOException {
+        brokerOtherLimiter.consume();
         Request request = new Request.Builder()
                 .url("%s/oms/portfolio/positions".formatted(baseUrl))
                 .method("GET", null)
@@ -139,6 +148,7 @@ public class BrokerService {
     }
 
     public List<OrderResponse> getOrders() throws IOException {
+        orderLimiter.consume();
         //The order history or the order book is transient as it only lives for a day in the system. When you retrieve orders,
         //you get all the orders for the day including open, pending, and executed ones.
         Request request = new Request.Builder()
@@ -160,6 +170,7 @@ public class BrokerService {
     }
 
     public OrderResponse addOrder(Order order) throws IOException {
+        orderLimiter.consume();
         order.validate();
         FormBody.Builder formBodyBuilder = new FormBody.Builder()
                 .add("tradingsymbol", order.getSymbol())
@@ -201,6 +212,7 @@ public class BrokerService {
     }
 
     public void cancelOrder(String orderId) throws IOException {
+        orderLimiter.consume();
         Request request = new Request.Builder()
                 .url("%s/oms/orders/regular/".formatted(baseUrl) + orderId)
                 .method("DELETE", null)
@@ -214,6 +226,7 @@ public class BrokerService {
     }
 
     public List<Quote> getQuotes(List<String> symbols) throws IOException {
+        quoteLimiter.consume();
         String url = symbols.stream().reduce((s, s2) -> {
             //url encode variable
             s2 = s2.replace(" ", "+").replace("&", "%26");
@@ -266,6 +279,7 @@ public class BrokerService {
     }
 
     public String addGTTOrder(GttOrder gttOrder) throws IOException {
+        brokerOtherLimiter.consume();
         String condition, orders;
         if(gttOrder.getGttType()== GttOrder.GttType.SINGLE) {
             condition = String.format("{\"exchange\":\"NSE\", \"tradingsymbol\":\"%s\", \"trigger_values\":[%.1f]," +
@@ -314,6 +328,7 @@ public class BrokerService {
     }
 
     public GttOrderResponse getGTTOrder(String id) throws IOException {
+        brokerOtherLimiter.consume();
         Request request = new Request.Builder()
                 .url("%s/oms/gtt/triggers/".formatted(baseUrl) + id)
                 .method("GET", null)
@@ -376,6 +391,7 @@ public class BrokerService {
     }
 
     public void cancelGTTOrder(String id) throws IOException {
+        brokerOtherLimiter.consume();
         MediaType mediaType = MediaType.parse("text/plain");
         RequestBody body = RequestBody.create(mediaType, "");
         Request request = new Request.Builder()
@@ -396,6 +412,7 @@ public class BrokerService {
     }
 
     public BrokerResponse<OrderResponse> getOrder(String orderId) throws IOException {
+        brokerOtherLimiter.consume();
         Request request = new Request.Builder()
                 .url("%s/oms/orders/".formatted(baseUrl) + orderId)
                 .method("GET", null)
@@ -405,10 +422,6 @@ public class BrokerService {
         Response response = client.newCall(request).execute();
         String myResult = response.body().string();
         response.close();
-        //JsonNode orderResponse = objectMapper.readTree(myResult);
-        //todo need buy date so use orderresponse
-        //return Enums.Status.valueOf(orderResponse.get("data").get(orderResponse.get("data").size() - 1).get("status").asText());
-
         BrokerResponse<OrderResponse[]> orderResponses = objectMapper.readValue(myResult, new TypeReference<BrokerResponse<OrderResponse[]>>() {
         });
         if (orderResponses.getStatus().equalsIgnoreCase("error")) {
