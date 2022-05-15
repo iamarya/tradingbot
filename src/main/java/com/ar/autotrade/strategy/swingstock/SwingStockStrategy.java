@@ -115,7 +115,15 @@ public class SwingStockStrategy {
             // *gsheet: gttfailed; sellorder failed -> make staus to fail todo(put sell AMO)
             // todo check if loss is triggered ot profit is triggered
             // gsheet: put sell price, date, orderid and update status to COMPLETE/ STOPLOSS
+            if(gtt.getTriggerType() == GttOrderResponse.TriggerType.STOPLOSS){
+                item.setStatus(SwingStockStatus.STOPLOSS);
+            } else {
+                item.setStatus(SwingStockStatus.COMPLETE);
 
+            }
+            item.setSellDate(gtt.getTriggeredOn().toLocalDate());
+            item.setSellPrice(gtt.getPrice().doubleValue());
+            db.update(item);
             return;
         }
         // gtt failed

@@ -337,17 +337,38 @@ public class BrokerService {
         GttOrderResponse.GttOrderResponseBuilder res = GttOrderResponse.builder()
                 .status(GttOrderResponse.Status.getFromValue(orderResponse.get("data").get("status").textValue()))
                 .lastUpdated(LocalDateTime.parse(orderResponse.get("data").get("updated_at").textValue(), formatter));
+        GttOrder.GttType gttType = orderResponse.get("data").get("orders").size() > 1 ? GttOrder.GttType.TWO_LEG : GttOrder.GttType.SINGLE;
+        res.gttType(gttType);
         if (orderResponse.get("data").get("status").textValue().equalsIgnoreCase("triggered")) {
-            String orderId = orderResponse.get("data").get("orders").get(0).get("result").get("order_result").get("order_id").textValue();
+            // check if two legged and check which one is triggered
+            // chk which one is triggered
+            int executedOrderIndex = 0;
+            if (gttType == GttOrder.GttType.TWO_LEG &&
+                    orderResponse.get("data").get("orders").get(0).get("result") != null) {
+                // in condition triger value 1st is stoplloss, 2nd one is target same for orders array also.
+                res.triggerType(GttOrderResponse.TriggerType.STOPLOSS);
+                executedOrderIndex = 0;
+            } else if (gttType == GttOrder.GttType.TWO_LEG &&
+                    orderResponse.get("data").get("orders").get(1).get("result") != null) {
+                res.triggerType(GttOrderResponse.TriggerType.TARGET);
+                executedOrderIndex = 1;
+            } else {
+                // single executed
+                res.triggerType(GttOrderResponse.TriggerType.TARGET);
+                executedOrderIndex = 0;
+            }
+            String orderId = orderResponse.get("data").get("orders").get(executedOrderIndex).get("result").get("order_result").get("order_id").textValue();
             if (orderId != null && !orderId.isEmpty()) {
                 if (getOrder(orderId).getData().getStatus() != Enums.Status.COMPLETE) {
                     log.debug("{} is not completed for GTT id {}", orderId, id);
                     res.status(GttOrderResponse.Status.getFromValue("cancelled"));
                 }
             }
-            res.orderStatus(orderResponse.get("data").get("orders").get(0).get("result").get("order_result").get("status").textValue())
-                    .price(orderResponse.get("data").get("orders").get(0).get("result").get("price").floatValue())
-                    .quantity(orderResponse.get("data").get("orders").get(0).get("result").get("quantity").intValue());
+            var triggeredOn = LocalDateTime.parse(orderResponse.get("data").get("orders").get(executedOrderIndex).get("result").get("timestamp").toString(), formatter);
+            res.triggerStatus(orderResponse.get("data").get("orders").get(executedOrderIndex).get("result").get("order_result").get("status").textValue())
+                    .price(orderResponse.get("data").get("orders").get(executedOrderIndex).get("result").get("price").floatValue())
+                    .quantity(orderResponse.get("data").get("orders").get(executedOrderIndex).get("result").get("quantity").intValue())
+                    .triggeredOn(triggeredOn);
         }
         return res.build();
     }

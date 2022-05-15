@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 public class GttOrderResponse {
 
 
-    public enum Status{
+    public enum Status {
         TRIGGERED("triggered"),
         ACTIVE("active"),
         CANCELLED("cancelled"),
@@ -22,6 +22,7 @@ public class GttOrderResponse {
         Status(String value) {
             this.value = value;
         }
+
         public static Status getFromValue(String value) {
             for (Status status : Status.values()) {
                 if (status.value.equals(value)) {
@@ -31,9 +32,37 @@ public class GttOrderResponse {
             return null;
         }
     }
+
     Status status;
     Integer quantity;
-    String orderStatus;
-    Float price;
+    String triggerStatus;
+    Float price; // put actual sell price from order
     LocalDateTime lastUpdated;
+    String triggerId;
+    GttOrder.GttType gttType;
+
+    LocalDateTime triggeredOn;
+    String limitOrderId;
+    Enums.Status limitOrderStatus;
+    TriggerType triggerType;
+
+    public enum TriggerType {
+        STOPLOSS("stoploss"),
+        TARGET("target");
+
+        private final String value;
+
+        TriggerType(String value) {
+            this.value = value;
+        }
+
+        public static TriggerType getFromValue(String value) {
+            for (TriggerType type : TriggerType.values()) {
+                if (type.value.equals(value)) {
+                    return type;
+                }
+            }
+            return null;
+        }
+    }
 }

@@ -1,261 +1,64 @@
 {
   "status": "success",
-  "data": [
-    {
-      "id": 100274990,
-      "user_id": "",
-      "parent_trigger": null,
-      "type": "single",
-      "created_at": "2022-05-12 17:30:21",
-      "updated_at": "2022-05-12 17:30:21",
-      "expires_at": "2023-05-12 17:30:21",
-      "status": "active",
-      "condition": {
-        "exchange": "NSE",
-        "last_price": 171.7,
-        "tradingsymbol": "NIFTYBEES",
-        "trigger_values": [
-          176.7
-        ],
-        "instrument_token": 2707457
-      },
-      "orders": [
-        {
-          "exchange": "NSE",
-          "tradingsymbol": "NIFTYBEES",
-          "product": "CNC",
-          "order_type": "LIMIT",
-          "transaction_type": "SELL",
-          "quantity": 58,
-          "price": 176.6,
-          "result": null
-        }
+  "data": {
+    "id": 123,
+    "user_id": "XX0000",
+    "parent_trigger": null,
+    "type": "two-leg",
+    "created_at": "2019-09-09 15:13:22",
+    "updated_at": "2019-09-09 15:15:08",
+    "expires_at": "2020-01-01 12:00:00",
+    "status": "triggered",
+    "condition": {
+      "exchange": "NSE",
+      "last_price": 102.6,
+      "tradingsymbol": "RAIN",
+      "trigger_values": [
+        102.0,
+        103.7
       ],
-      "meta": {}
+      "instrument_token": 3926273
     },
-    {
-      "id": 100274988,
-      "user_id": "",
-      "parent_trigger": null,
-      "type": "single",
-      "created_at": "2022-05-12 17:30:21",
-      "updated_at": "2022-05-12 17:30:21",
-      "expires_at": "2023-05-12 17:30:21",
-      "status": "active",
-      "condition": {
+    "orders": [
+      {
         "exchange": "NSE",
-        "last_price": 171.7,
-        "tradingsymbol": "NIFTYBEES",
-        "trigger_values": [
-          169.6
-        ],
-        "instrument_token": 2707457
+        "tradingsymbol": "RAIN",
+        "product": "CNC",
+        "order_type": "LIMIT",
+        "transaction_type": "SELL",
+        "quantity": 1,
+        "price": 1,
+        "result": null
       },
-      "orders": [
-        {
-          "exchange": "NSE",
-          "tradingsymbol": "NIFTYBEES",
-          "product": "CNC",
-          "order_type": "LIMIT",
-          "transaction_type": "BUY",
-          "quantity": 59,
-          "price": 169.7,
-          "result": null
-        }
-      ],
-      "meta": {}
-    },
-    {
-      "id": 98716561,
-      "user_id": "",
-      "parent_trigger": null,
-      "type": "single",
-      "created_at": "2022-05-05 01:05:42",
-      "updated_at": "2022-05-05 01:05:42",
-      "expires_at": "2023-05-05 01:05:42",
-      "status": "active",
-      "condition": {
+      {
         "exchange": "NSE",
-        "last_price": 461.65,
-        "tradingsymbol": "HINDALCO",
-        "trigger_values": [
-          502.4
-        ],
-        "instrument_token": 348929
-      },
-      "orders": [
-        {
+        "tradingsymbol": "RAIN",
+        "product": "CNC",
+        "order_type": "LIMIT",
+        "transaction_type": "SELL",
+        "quantity": 1,
+        "price": 1,
+        "result": {
+          "account_id": "XX0000",
           "exchange": "NSE",
-          "tradingsymbol": "HINDALCO",
-          "product": "CNC",
-          "order_type": "LIMIT",
-          "transaction_type": "SELL",
-          "quantity": 4,
-          "price": 502.3,
-          "result": null
-        }
-      ],
-      "meta": {}
-    },
-    {
-      "id": 98178251,
-      "user_id": "",
-      "parent_trigger": null,
-      "type": "single",
-      "created_at": "2022-04-29 15:27:15",
-      "updated_at": "2022-04-29 15:27:15",
-      "expires_at": "2023-04-29 15:27:15",
-      "status": "active",
-      "condition": {
-        "exchange": "NSE",
-        "last_price": 160.3,
-        "tradingsymbol": "ONGC",
-        "trigger_values": [
-          173.2
-        ],
-        "instrument_token": 633601
-      },
-      "orders": [
-        {
-          "exchange": "NSE",
-          "tradingsymbol": "ONGC",
-          "product": "CNC",
-          "order_type": "LIMIT",
-          "transaction_type": "SELL",
-          "quantity": 10,
-          "price": 173.1,
-          "result": null
-        }
-      ],
-      "meta": {}
-    },
-    {
-      "id": 97792773,
-      "user_id": "",
-      "parent_trigger": null,
-      "type": "single",
-      "created_at": "2022-04-27 21:05:30",
-      "updated_at": "2022-04-27 21:05:30",
-      "expires_at": "2023-04-27 21:05:30",
-      "status": "active",
-      "condition": {
-        "exchange": "NSE",
-        "last_price": 1552.8,
-        "tradingsymbol": "INFY",
-        "trigger_values": [
-          1635.7
-        ],
-        "instrument_token": 408065
-      },
-      "orders": [
-        {
-          "exchange": "NSE",
-          "tradingsymbol": "INFY",
+          "tradingsymbol": "RAIN",
+          "validity": "DAY",
           "product": "CNC",
           "order_type": "LIMIT",
           "transaction_type": "SELL",
           "quantity": 1,
-          "price": 1635.6,
-          "result": null
+          "price": 1,
+          "meta": "{\"app_id\":12617,\"gtt\":105099}",
+          "timestamp": "2019-09-09 15:15:08",
+          "triggered_at": 103.7,
+          "order_result": {
+            "status": "failed",
+            "order_id": "",
+            "rejection_reason": "Your order price is lower than the current lower circuit limit of 70.65. Place an order within the daily range."
+          }
         }
-      ],
-      "meta": {}
-    },
-    {
-      "id": 97336774,
-      "user_id": "",
-      "parent_trigger": null,
-      "type": "single",
-      "created_at": "2022-04-25 14:23:52",
-      "updated_at": "2022-04-25 14:26:16",
-      "expires_at": "2023-04-25 14:23:52",
-      "status": "active",
-      "condition": {
-        "exchange": "NSE",
-        "last_price": 494.15,
-        "tradingsymbol": "HINDALCO",
-        "trigger_values": [
-          522.8
-        ],
-        "instrument_token": 348929
-      },
-      "orders": [
-        {
-          "exchange": "NSE",
-          "tradingsymbol": "HINDALCO",
-          "product": "CNC",
-          "order_type": "LIMIT",
-          "transaction_type": "SELL",
-          "quantity": 2,
-          "price": 522.7,
-          "result": null
-        }
-      ],
-      "meta": {}
-    },
-    {
-      "id": 97335919,
-      "user_id": "",
-      "parent_trigger": null,
-      "type": "single",
-      "created_at": "2022-04-25 14:21:35",
-      "updated_at": "2022-04-25 14:21:35",
-      "expires_at": "2023-04-25 14:21:35",
-      "status": "active",
-      "condition": {
-        "exchange": "NSE",
-        "last_price": 1271.1,
-        "tradingsymbol": "TECHM",
-        "trigger_values": [
-          1346.9
-        ],
-        "instrument_token": 3465729
-      },
-      "orders": [
-        {
-          "exchange": "NSE",
-          "tradingsymbol": "TECHM",
-          "product": "CNC",
-          "order_type": "LIMIT",
-          "transaction_type": "SELL",
-          "quantity": 1,
-          "price": 1346.8,
-          "result": null
-        }
-      ],
-      "meta": {}
-    },
-    {
-      "id": 97088788,
-      "user_id": "",
-      "parent_trigger": null,
-      "type": "single",
-      "created_at": "2022-04-22 14:20:43",
-      "updated_at": "2022-04-22 14:20:43",
-      "expires_at": "2023-04-22 14:20:43",
-      "status": "active",
-      "condition": {
-        "exchange": "NSE",
-        "last_price": 15493.85,
-        "tradingsymbol": "BAJAJFINSV",
-        "trigger_values": [
-          16328.5
-        ],
-        "instrument_token": 4268801
-      },
-      "orders": [
-        {
-          "exchange": "NSE",
-          "tradingsymbol": "BAJAJFINSV",
-          "product": "CNC",
-          "order_type": "LIMIT",
-          "transaction_type": "SELL",
-          "quantity": 1,
-          "price": 16328,
-          "result": null
-        }
-      ],
-      "meta": {}
-    }
-  ]
+      }
+    ],
+    "meta": null
+  }
 }
