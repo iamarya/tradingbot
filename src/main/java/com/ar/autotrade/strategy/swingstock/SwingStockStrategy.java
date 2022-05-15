@@ -37,11 +37,14 @@ public class SwingStockStrategy {
 
     @PostConstruct
     public void run() throws IOException {
-        if(!broker.isStarted()){
+        if (!broker.isStarted()) {
             broker.start();
         }
         List<SwingStock> list = db.getAll(SwingStock.class);
         List<SwingStock> workingList = list.stream().filter(x -> {
+            if(!x.getEnabled()){
+                return false;
+            }
             if (x.getStatus() == SwingStockStatus.PREDICTED ||
                     x.getStatus() == SwingStockStatus.BUY_PLACED ||
                     x.getStatus() == SwingStockStatus.GTT_PLACED ||

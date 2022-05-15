@@ -58,4 +58,7 @@ public class SwingStock extends GoogleSheet {
 
     @Column(name = "sell_price", order = 15)
     private Double sellPrice;
+
+    @Column(name = "enabled", order = 16)
+    private Boolean enabled;
 }

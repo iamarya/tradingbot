@@ -139,6 +139,8 @@ public class BrokerService {
     }
 
     public List<OrderResponse> getOrders() throws IOException {
+        //The order history or the order book is transient as it only lives for a day in the system. When you retrieve orders,
+        //you get all the orders for the day including open, pending, and executed ones.
         Request request = new Request.Builder()
                 .url("%s/oms/orders".formatted(baseUrl))
                 .method("GET", null)
@@ -407,12 +409,18 @@ public class BrokerService {
         //todo need buy date so use orderresponse
         //return Enums.Status.valueOf(orderResponse.get("data").get(orderResponse.get("data").size() - 1).get("status").asText());
 
-        BrokerResponse<OrderResponse> orderResponse = objectMapper.readValue(myResult, new TypeReference<BrokerResponse<OrderResponse>>() {
+        BrokerResponse<OrderResponse[]> orderResponses = objectMapper.readValue(myResult, new TypeReference<BrokerResponse<OrderResponse[]>>() {
         });
-        if (orderResponse.getStatus().equalsIgnoreCase("error")) {
-            log.error("response status {} response {}", orderResponse.getStatus(), myResult);
+        if (orderResponses.getStatus().equalsIgnoreCase("error")) {
+            log.error("response status {} response {}", orderResponses.getStatus(), myResult);
             return null;
         }
+        OrderResponse[] orders = orderResponses.getData();
+        OrderResponse order = orders[orders.length - 1];
+        BrokerResponse<OrderResponse> orderResponse = new BrokerResponse();
+        orderResponse.setStatus(orderResponses.getStatus());
+        orderResponse.setMessage(orderResponses.getMessage());
+        orderResponse.setData(order);
         return orderResponse;
     }
 }
