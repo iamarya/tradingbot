@@ -118,6 +118,12 @@ public class SwingStockStrategy {
 
             return;
         }
+        // gtt failed
+        if(gtt.getStatus()== GttOrderResponse.Status.CANCELLED) {
+            item.setStatus(SwingStockStatus.GTT_FAILED);
+            db.update(item);
+            return;
+        }
         if(item.getExpiryAfter()==null){
             // never expire
             return;

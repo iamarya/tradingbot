@@ -12,7 +12,9 @@ public class GttOrderResponse {
 
     public enum Status{
         TRIGGERED("triggered"),
-        ACTIVE("active");
+        ACTIVE("active"),
+        CANCELLED("cancelled"),
+        DELETED("deleted");
         //triggered, active, (cancelled, rejected, disabled,) by system ; deleted by user,
 
         private final String value;

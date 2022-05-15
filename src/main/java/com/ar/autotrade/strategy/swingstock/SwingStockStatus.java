@@ -10,6 +10,6 @@ public enum SwingStockStatus {
     STOPLOSS,
     BUY_FAILED,
     GTT_FAILED,
-    SELL_FAILED,
-    CANCEL;
+    SELL_FAILED, // may not happen ever
+    CANCEL; // if set from ui no action will be taken after
 }
