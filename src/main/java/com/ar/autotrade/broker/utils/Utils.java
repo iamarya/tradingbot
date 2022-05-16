@@ -38,7 +38,7 @@ public class Utils {
     }
 
     public static Float getGttLimitPriceUsingLtp(Double buyPrice, Double profitPercentage, Float ltp) {
-        var target = buyPrice*ltp/100;
+        var target = buyPrice + buyPrice*profitPercentage/100;
         return (float) target;
     }
 
