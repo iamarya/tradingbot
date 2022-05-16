@@ -60,7 +60,9 @@ public class Enums {
         @JsonProperty("MODIFY PENDING") MODIFY_PENDING("MODIFY PENDING"),
         @JsonProperty("TRIGGER PENDING") TRIGGER_PENDING("TRIGGER PENDING"),
         @JsonProperty("CANCEL PENDING") CANCEL_PENDING("CANCEL PENDING"),
-        @JsonProperty("AMO REQ RECEIVED") AMO_REQ_RECEIVED("AMO REQ RECEIVED");
+        @JsonProperty("AMO REQ RECEIVED") AMO_REQ_RECEIVED("AMO REQ RECEIVED"),
+        @JsonProperty("PUT ORDER REQ RECEIVED") PUT_ORDER_REQ_RECEIVED("PUT ORDER REQ RECEIVED")
+        ;
         private String text;
 
     } // there are other values as well

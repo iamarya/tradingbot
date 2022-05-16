@@ -86,9 +86,9 @@ public class SwingStockStrategy {
         // check if buy triggered
         if(buyOrder.getData().getStatus() == Enums.Status.COMPLETE) {
             // broker: then place gtt order
-            Float limitPrice = Utils.getGttLimitPriceUsingLtp(item.getBuyPrice(), item.getProfitPercentage(), quote.getLtp());
+            Float limitPrice = Utils.getGttLimitPriceUsingLtp(buyOrder.getData().getAveragePrice().doubleValue(), item.getProfitPercentage(), quote.getLtp());
             Float triggerPrice = Utils.getTriggerPriceFromPrice(limitPrice, Enums.TransactionType.SELL);
-            Float stopLossPrice = Utils.getGttStopLossPriceUsingLtp(item.getBuyPrice(), item.getStopLossPercentage(), quote.getLtp());
+            Float stopLossPrice = Utils.getGttStopLossPriceUsingLtp(buyOrder.getData().getAveragePrice().doubleValue(), item.getStopLossPercentage(), quote.getLtp());
             Float stopLossTriggerPrice = Utils.getTriggerPriceFromPrice(stopLossPrice, Enums.TransactionType.SELL);
             var gttOrder = GttOrder.builder().quantity(item.getQuantity())
                     .symbol(item.getTickName()).transactionType(Enums.TransactionType.SELL)
@@ -116,14 +116,14 @@ public class SwingStockStrategy {
         var gtt = broker.getGTTOrder(item.getSellOrderId());
         if(gtt.getStatus()== GttOrderResponse.Status.TRIGGERED) {
             // *gsheet: gttfailed; sellorder failed -> make staus to fail todo(put sell AMO)
-            // todo check if loss is triggered ot profit is triggered
-            // gsheet: put sell price, date, orderid and update status to COMPLETE/ STOPLOSS
+            // check if loss is triggered ot profit is triggered
             if(gtt.getTriggerType() == GttOrderResponse.TriggerType.STOPLOSS){
                 item.setStatus(SwingStockStatus.STOPLOSS);
             } else {
                 item.setStatus(SwingStockStatus.COMPLETE);
 
             }
+            // gsheet: put sell price, date, orderid and update status to COMPLETE/ STOPLOSS
             item.setSellDate(gtt.getTriggeredOn().toLocalDate());
             item.setSellPrice(gtt.getPrice().doubleValue());
             db.update(item);

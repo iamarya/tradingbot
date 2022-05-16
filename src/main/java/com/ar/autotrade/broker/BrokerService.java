@@ -44,7 +44,7 @@ public class BrokerService {
     private String baseUrl;
 
     /**
-     * todo Rate Limitter add multiple
+     * Rate Limitter add multiple
      * Quote	1req/second
      * Historical candle	3req/second
      * Order placement	10req/second
@@ -56,7 +56,6 @@ public class BrokerService {
 
     @Autowired
     OkHttpClient client;
-
 
     private static final ObjectMapper objectMapper =
             new ObjectMapper()
@@ -295,11 +294,11 @@ public class BrokerService {
                             "\"transaction_type\": \"%s\", \"quantity\": %d, " +
                             "\"order_type\": \"LIMIT\",\"product\": \"CNC\", \"price\": %.1f}",
                     gttOrder.getSymbol(), gttOrder.getTransactionType().toString(), gttOrder.getQuantity(), gttOrder.getStopLossLimitPrice());
-            String orderTarget = String.format("[{\"exchange\":\"NSE\", \"tradingsymbol\": \"%s\", " +
+            String orderTarget = String.format("{\"exchange\":\"NSE\", \"tradingsymbol\": \"%s\", " +
                             "\"transaction_type\": \"%s\", \"quantity\": %d, " +
-                            "\"order_type\": \"LIMIT\",\"product\": \"CNC\", \"price\": %.1f}]",
+                            "\"order_type\": \"LIMIT\",\"product\": \"CNC\", \"price\": %.1f}",
                     gttOrder.getSymbol(), gttOrder.getTransactionType().toString(), gttOrder.getQuantity(), gttOrder.getLimitPrice());
-            orders = "[".concat(orderStopLoss).concat(orderTarget).concat("]");
+            orders = "[".concat(orderStopLoss).concat(",").concat(orderTarget).concat("]");
         }
 
         MediaType mediaType = MediaType.parse("application/x-www-form-urlencoded");
@@ -350,7 +349,8 @@ public class BrokerService {
         if (orderResponse.get("status").textValue().equalsIgnoreCase("error")) {
             throw new RuntimeException(orderResponse.get("message").textValue());
         }
-        //BrokerResponse<GttOrderResponse> orderResponse = objectMapper.readValue(myResult, new TypeReference<BrokerResponse<GttOrderResponse>>() { }); todo use full response
+        //BrokerResponse<GttOrderResponse> orderResponse = objectMapper.readValue(myResult, new TypeReference<BrokerResponse<GttOrderResponse>>() { });
+
         GttOrderResponse.GttOrderResponseBuilder res = GttOrderResponse.builder()
                 .status(GttOrderResponse.Status.getFromValue(orderResponse.get("data").get("status").textValue()))
                 .lastUpdated(LocalDateTime.parse(orderResponse.get("data").get("updated_at").textValue(), formatter));
