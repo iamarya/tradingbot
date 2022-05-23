@@ -14,7 +14,8 @@ public class GttOrderResponse {
         TRIGGERED("triggered"),
         ACTIVE("active"),
         CANCELLED("cancelled"),
-        DELETED("deleted");
+        DELETED("deleted"),
+        REJECTED("rejected");
         //triggered, active, (cancelled, rejected, disabled,) by system ; deleted by user,
 
         private final String value;
@@ -35,7 +36,7 @@ public class GttOrderResponse {
 
     Status status;
     Integer quantity;
-    String triggerStatus;
+    String triggerStatus; // triggered order status
     Float price; // put actual sell price from order
     LocalDateTime lastUpdated;
     String triggerId;

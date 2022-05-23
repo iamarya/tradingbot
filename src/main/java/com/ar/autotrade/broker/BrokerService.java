@@ -146,6 +146,9 @@ public class BrokerService {
         return null;
     }
 
+    /*
+    This api is transient. Means the order data will be removed from broker before the next day.
+     */
     public List<OrderResponse> getOrders() throws IOException {
         orderLimiter.consume();
         //The order history or the order book is transient as it only lives for a day in the system. When you retrieve orders,
@@ -411,6 +414,9 @@ public class BrokerService {
         }
     }
 
+    /*
+    This api is transient. Means the order data will be removed from broker before the next day.
+    */
     public BrokerResponse<OrderResponse> getOrder(String orderId) throws IOException {
         brokerOtherLimiter.consume();
         Request request = new Request.Builder()

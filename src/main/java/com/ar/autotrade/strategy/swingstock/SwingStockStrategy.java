@@ -164,7 +164,8 @@ public class SwingStockStrategy {
             // gsheet: update with sell date,  sell price, EXPIRED
             item.setSellPrice(orderResponse.getData().getAveragePrice().doubleValue());
             item.setSellDate(orderResponse.getData().getOrderTimestamp().toLocalDate());
-            item.setStatus(SwingStockStatus.COMPLETE);
+            item.setStatus(SwingStockStatus.EXPIRED);
+            db.update(item);
             // *gsheet: if sell failed then make status to FAILED
         }
     }

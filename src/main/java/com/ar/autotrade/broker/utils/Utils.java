@@ -39,7 +39,26 @@ public class Utils {
 
     public static Float getGttLimitPriceUsingLtp(Double buyPrice, Double profitPercentage, Float ltp) {
         var target = buyPrice + buyPrice*profitPercentage/100;
+
         return (float) target;
+    }
+
+    private Float getTriggerValueNearTo(Float ltp, Enums.TransactionType type) {
+        //"Trigger price was too close to the last price. (difference should be more than 0.25%)"
+        if (type == Enums.TransactionType.BUY) {
+            Float triggerValue = ltp - ltp * .26f / 100;
+            if (Math.abs(ltp - triggerValue) < .1) {
+                //(difference should be more than 0.09)
+                triggerValue = ltp - .1f;
+            }
+            return triggerValue;
+        } else {
+            Float triggerValue = ltp + ltp * .26f / 100;
+            if (Math.abs(ltp - triggerValue) < .1) {
+                triggerValue = ltp + .1f;
+            }
+            return triggerValue;
+        }
     }
 
     public static Float getTriggerPriceFromPrice(Float limitPrice, Enums.TransactionType type) {
