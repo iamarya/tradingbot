@@ -69,7 +69,7 @@ public class SwingETFStrategy {
     public void start() throws IOException, GeneralSecurityException {
         if (!broker.isStarted()) {
             broker.start();
-            log.debug("Kite started in strategy");
+            log.info("Kite started in strategy");
         }
         main();
         System.out.println("END");
@@ -148,7 +148,7 @@ public class SwingETFStrategy {
                         service.spreadsheets().values().update(spreadsheetId, range, body)
                                 .setValueInputOption("RAW")
                                 .execute();
-                log.debug("# profit sheet updated {}, {}", result.getUpdatedCells());
+                log.info("# profit sheet updated {}, {}", result.getUpdatedCells());
                 failed = false;
             } catch (IOException e) {
                 log.error("***Error writing to google {}", counter);
@@ -168,7 +168,7 @@ public class SwingETFStrategy {
                 service.spreadsheets().values().update(spreadsheetId, range, body)
                         .setValueInputOption("RAW")
                         .execute();
-        log.debug("# position sheet updated {}, {}", result.getUpdatedCells());
+        log.info("# position sheet updated {}, {}", result.getUpdatedCells());
     }
 
     /*
@@ -176,8 +176,8 @@ public class SwingETFStrategy {
      * */
     private void processSingle(SwingStockConfig swingStockConfig) throws IOException {
         List<SwingLog> logList = getLogList(swingStockConfig.getSymbol());
-        log.debug("\n\nsymbol {}", swingStockConfig);
-        log.debug("list log {}", logList);
+        log.info("\n\nsymbol {}", swingStockConfig);
+        log.info("list log {}", logList);
         updateNoBuyIfAmountExceed(logList, swingStockConfig);
         // if no logs then buy at market price/ LTP
         boolean buyLtpFlag = checkIfNoLogThenBuyLtp(swingStockConfig, logList);
@@ -388,7 +388,7 @@ public class SwingETFStrategy {
             buyPrice = Utils.floor(getTriggerValueNearTo(quote.getLtp(), Enums.TransactionType.BUY), 1);
         }
         if (buyPrice > quote.getLtp()) {
-            log.debug("buy price > ltp, so buying at ltp");
+            log.info("buy price > ltp, so buying at ltp");
             buyPrice = Utils.floor(getTriggerValueNearTo(quote.getLtp(), Enums.TransactionType.BUY), 1);
         }
         Integer buyQuantity = getQuantity(swingStockConfig, buyPrice);
@@ -420,7 +420,7 @@ public class SwingETFStrategy {
         }
         Float sellPrice = Utils.round(sellPending.getBuyPrice() + sellPending.getBuyPrice() * swingStockConfig.getPerChange() / 100, 1);
         if (sellPrice < quote.getLtp()) {
-            log.debug("sell price < ltp, so selling at ltp");
+            log.info("sell price < ltp, so selling at ltp");
             sellPrice = Utils.ceil(getTriggerValueNearTo(quote.getLtp(), Enums.TransactionType.SELL), 1);
         }
         Float triggerValue = Utils.getTriggerPriceFromPrice(sellPrice, Enums.TransactionType.SELL);
@@ -496,7 +496,7 @@ public class SwingETFStrategy {
             if (parentLog != null) {
                 Float sellPrice = Utils.round(parentLog.getBuyPrice() + parentLog.getBuyPrice() * swingStockConfig.getPerChange() / 100, 1);
                 if (sellPrice < quote.getLtp()) {
-                    log.debug("sell price < ltp, so selling at ltp");
+                    log.info("sell price < ltp, so selling at ltp");
                     sellPrice = Utils.ceil(getTriggerValueNearTo(quote.getLtp(), Enums.TransactionType.SELL), 1);
                 }
                 Float triggerValue = Utils.getTriggerPriceFromPrice(sellPrice, Enums.TransactionType.SELL);
@@ -521,7 +521,7 @@ public class SwingETFStrategy {
                     buyLtp = true;
                 }
                 if (buyLtp) {
-                    log.debug("buy price > ltp, so buying at ltp");
+                    log.info("buy price > ltp, so buying at ltp");
                     buyPrice = Utils.floor(getTriggerValueNearTo(quote.getLtp(), Enums.TransactionType.BUY), 1);
                 }
                 Integer buyQuantity = getQuantity(swingStockConfig, buyPrice);
@@ -595,7 +595,7 @@ public class SwingETFStrategy {
             if (!swingStockConfig.noBuy) {
                 Float buyPrice = Utils.round(100 / (100 + swingStockConfig.getPerChange()) * buyPending.getBuyPrice(), 1);
                 if (buyPrice > quote.getLtp()) {
-                    log.debug("buy price > ltp, so buying at ltp");
+                    log.info("buy price > ltp, so buying at ltp");
                     buyPrice = Utils.floor(getTriggerValueNearTo(quote.getLtp(), Enums.TransactionType.BUY), 1);
                 }
                 Integer buyQuantity = getQuantity(swingStockConfig, buyPrice);
@@ -621,7 +621,7 @@ public class SwingETFStrategy {
             // add new sell order
             Float sellPrice = Utils.round(buyPending.getBuyPrice() + buyPending.getBuyPrice() * swingStockConfig.getPerChange() / 100, 1);
             if (sellPrice < quote.getLtp()) {
-                log.debug("sell price < ltp, so selling at ltp");
+                log.info("sell price < ltp, so selling at ltp");
                 sellPrice = Utils.ceil(getTriggerValueNearTo(quote.getLtp(), Enums.TransactionType.SELL), 1);
             }
             Float triggerValue = Utils.getTriggerPriceFromPrice(sellPrice, Enums.TransactionType.SELL);
@@ -725,7 +725,7 @@ public class SwingETFStrategy {
                                 .setValueInputOption("RAW")
                                 .execute();
                 failed= false;
-                log.debug("******************* Sheet updated {}, {}", symbol, result.getUpdatedCells());
+                log.info("******************* Sheet updated {}, {}", symbol, result.getUpdatedCells());
             } catch (IOException e) {
                 log.error("***Error writing to google {} {}", count, symbol);
             }

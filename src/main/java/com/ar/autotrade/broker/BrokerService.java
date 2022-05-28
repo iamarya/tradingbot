@@ -206,7 +206,7 @@ public class BrokerService {
         response.close();
         BrokerResponse<OrderResponse> orderResponse = objectMapper.readValue(myResult, new TypeReference<BrokerResponse<OrderResponse>>() {
         });
-        log.debug("Order response is {}", orderResponse);
+        log.info("Order response is {}", orderResponse);
         if (orderResponse.getStatus().equalsIgnoreCase("error")) {
             throw new RuntimeException(orderResponse.getMessage());
         }
@@ -224,7 +224,7 @@ public class BrokerService {
         Response response = client.newCall(request).execute();
         String myResult = response.body().string();
         response.close();
-        log.debug("response for id {} is {}", orderId, myResult);
+        log.info("response for id {} is {}", orderId, myResult);
     }
 
     public List<Quote> getQuotes(List<String> symbols) throws IOException {
@@ -234,7 +234,7 @@ public class BrokerService {
             s2 = s2.replace(" ", "+").replace("&", "%26");
             return s.concat("&i=NSE:").concat(s2);
         }).get();
-        //log.debug("url for ticks {}", url);
+        //log.info("url for ticks {}", url);
         Request request = new Request.Builder()
                 .url("%s/oms/quote?i=NSE:".formatted(baseUrl) + url)
                 .method("GET", null)
@@ -255,7 +255,7 @@ public class BrokerService {
             try {
                 String symbol = entry.getKey().toString().split(":")[1];
                 Map val = (Map) entry.getValue();
-                //log.debug("each value {}:: {}", symbol, val);
+                //log.info("each value {}:: {}", symbol, val);
                 Quote.QuoteBuilder tickBuilder = Quote.builder();
                 Float ltp = Float.parseFloat(val.get("last_price").toString());
                 Float prevClose = Float.parseFloat(((Map) val.get("ohlc")).get("close").toString());
@@ -272,7 +272,7 @@ public class BrokerService {
             }
             return quote;
         }).collect(Collectors.toList());
-        //log.debug(list.toString());
+        //log.info(list.toString());
         return list;
     }
 
@@ -317,11 +317,11 @@ public class BrokerService {
                 .build();
         Response response = client.newCall(request).execute();
         String myResult = response.body().string();
-        log.debug("myResult {} ", myResult);
+        log.info("myResult {} ", myResult);
         response.close();
         BrokerResponse<Map<String, String>> orderResponse = objectMapper.readValue(myResult, new TypeReference<BrokerResponse<Map<String, String>>>() {
         });
-        log.debug("Order response is {}", orderResponse);
+        log.info("Order response is {}", orderResponse);
         if (orderResponse.getStatus().equalsIgnoreCase("error")) {
             log.error("conditions {}; orders {}", condition, orders);
             throw new RuntimeException(orderResponse.getMessage());
@@ -340,7 +340,7 @@ public class BrokerService {
                 .build();
         Response response = client.newCall(request).execute();
         String myResult = response.body().string();
-        log.debug("myResult {} ", myResult);
+        log.info("myResult {} ", myResult);
         response.close();
         JsonNode orderResponse = null;
         try {
@@ -348,7 +348,7 @@ public class BrokerService {
         } catch (JsonProcessingException e) {
             return GttOrderResponse.builder().status(GttOrderResponse.Status.getFromValue("cancelled")).build(); //as the order canceled it will not get from kite
         }
-        log.debug("Order response is {}", orderResponse);
+        log.info("Order response is {}", orderResponse);
         if (orderResponse.get("status").textValue().equalsIgnoreCase("error")) {
             throw new RuntimeException(orderResponse.get("message").textValue());
         }
@@ -380,11 +380,13 @@ public class BrokerService {
             String orderId = orderResponse.get("data").get("orders").get(executedOrderIndex).get("result").get("order_result").get("order_id").textValue();
             if (orderId != null && !orderId.isEmpty()) {
                 if (getOrder(orderId).getData().getStatus() != Enums.Status.COMPLETE) {
-                    log.debug("{} is not completed for GTT id {}", orderId, id);
+                    log.info("{} is not completed for GTT id {}", orderId, id);
                     res.status(GttOrderResponse.Status.getFromValue("cancelled"));
                 }
             }
-            var triggeredOn = LocalDateTime.parse(orderResponse.get("data").get("orders").get(executedOrderIndex).get("result").get("timestamp").toString(), formatter);
+            var triggeredOnString = orderResponse.get("data").get("orders").get(executedOrderIndex).get("result").get("timestamp").toString();
+            // fix for error Text '"2022-05-25 12:06:02"' could not be parsed at index 0; todo need to check why double quote comes
+            var triggeredOn = LocalDateTime.parse(triggeredOnString.replace("\"", ""), formatter);
             res.triggerStatus(orderResponse.get("data").get("orders").get(executedOrderIndex).get("result").get("order_result").get("status").textValue())
                     .price(orderResponse.get("data").get("orders").get(executedOrderIndex).get("result").get("price").floatValue())
                     .quantity(orderResponse.get("data").get("orders").get(executedOrderIndex).get("result").get("quantity").intValue())
@@ -405,10 +407,10 @@ public class BrokerService {
                 .build();
         Response response = client.newCall(request).execute();
         String myResult = response.body().string();
-        log.debug("myResult {} ", myResult);
+        log.info("myResult {} ", myResult);
         response.close();
         JsonNode orderResponse = objectMapper.readTree(myResult);
-        log.debug("Order response is {}", orderResponse);
+        log.info("Order response is {}", orderResponse);
         if (orderResponse.get("status").textValue().equalsIgnoreCase("error")) {
             throw new RuntimeException(orderResponse.get("message").textValue());
         }
